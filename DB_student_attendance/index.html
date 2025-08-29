@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Document</title>
+</head>
+<body>
+    
+</body>
+</html>
+
+<php?>
+class Student {
+        private $conn;
+        private $table_name = "students";
+
+        public $id;
+        public $name;
+        public $student_id;
+
+        public function __construct($db) {
+            $this->conn = $db;
+        }
+
+        public function addStudent() { /* ... */ }
+        public function listStudents() { /* ... */ }
+        public function editStudent() { /* ... */ }
+        public function deleteStudent() { /* ... */ }
+    }
+</php>
