@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reports - IBT Badminton</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="nav-container">
+        <div class="nav-brand">
+          <div class="logo-icon-small">🏸</div>
+          <div>
+            <h1 class="nav-title">IBT Badminton Center</h1>
+            <p class="nav-subtitle">Sport Excellence</p>
+          </div>
+        </div>
+
+        <button class="mobile-menu-btn" id="mobileMenuBtn">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+
+        <div class="nav-menu" id="navMenu">
+          <a href="dashboard.html" class="nav-link active">Dashboard</a>
+          <a href="booking.html" class="nav-link" id="bookingLink">Bookings</a>
+          <a href="admin_reports.html" class="nav-link admin-only">Reports</a>
+          <a href="admin_users.html" class="nav-link admin-only">Users</a>
+          <a href="tournaments.html" class="nav-link">Tournaments</a>
+          <a href="history.html" class="nav-link active">History</a>
+          <button onclick="logout()" class="btn btn-logout">Logout</button>
+        </div>
+      </div>
+    </nav>
+
+    <main class="main-content">
+      <div class="container">
+        <div class="page-header">
+          <h2>Reports & Analytics</h2>
+          <p>Monitor system performance and manage bookings</p>
+        </div>
+
+        <div class="stats-grid">
+          <div class="card">
+            <h4 class="stat-title">Total Bookings</h4>
+            <p class="stat-number" id="totalBookings">0</p>
+            <p class="stat-change positive">All time</p>
+          </div>
+          <div class="card">
+            <h4 class="stat-title">Pending Bookings</h4>
+            <p class="stat-number" id="pendingBookings">0</p>
+            <p class="stat-change" style="color: #f59e0b">Awaiting action</p>
+          </div>
+          <div class="card">
+            <h4 class="stat-title">Revenue This Month</h4>
+            <p class="stat-number" id="revenueMonth">₱0</p>
+            <p class="stat-change positive">Monthly earnings</p>
+          </div>
+          <div class="card">
+            <h4 class="stat-title">Confirmed Today</h4>
+            <p class="stat-number" id="confirmedToday">0</p>
+            <p class="stat-change positive">Today's bookings</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 20px;
+              flex-wrap: wrap;
+              gap: 16px;
+            "
+          >
+            <h3 class="card-title" style="margin: 0">All Bookings</h3>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap">
+              <select
+                id="statusFilter"
+                onchange="filterBookings()"
+                style="
+                  padding: 8px 16px;
+                  border: 2px solid #e5e7eb;
+                  border-radius: 8px;
+                "
+              >
+                <option value="">All Status</option>
+                <option value="Pending">Pending</option>
+                <option value="Confirmed">Confirmed</option>
+                <option value="Completed">Completed</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+              <button
+                onclick="loadAllBookings()"
+                class="btn btn-sm"
+                style="padding: 8px 16px"
+              >
+                🔄 Refresh
+              </button>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Member</th>
+                  <th>Court</th>
+                  <th>Date</th>
+                  <th>Time</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="bookingsTable">
+                <tr>
+                  <td colspan="8" style="text-align: center; padding: 40px">
+                    <div style="color: #9ca3af">Loading bookings...</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="modal" style="display: none">
+      <div class="modal-content" style="max-width: 400px">
+        <h3 id="modalTitle" style="margin-bottom: 16px; color: #111827">
+          Confirm Action
+        </h3>
+        <p id="modalMessage" style="color: #6b7280; margin-bottom: 24px"></p>
+        <div style="display: flex; gap: 12px">
+          <button
+            onclick="closeModal()"
+            class="btn btn-secondary"
+            style="flex: 1"
+          >
+            Cancel
+          </button>
+          <button id="confirmButton" class="btn btn-primary" style="flex: 1">
+            Confirm
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="main.js"></script>
+    <script>
+      checkAuth();
+
+      let allBookings = [];
+      loadAllBookings();
+      loadStats();
+
+      async function loadStats() {
+        try {
+          const response = await fetch("admin_stats.php");
+          const data = await response.json();
+
+          if (data.success) {
+            document.getElementById("totalBookings").textContent =
+              data.stats.total_bookings || 0;
+            document.getElementById("pendingBookings").textContent =
+              data.stats.pending_bookings || 0;
+            document.getElementById("revenueMonth").textContent =
+              "₱" + (data.stats.revenue_month || 0).toLocaleString();
+            document.getElementById("confirmedToday").textContent =
+              data.stats.confirmed_today || 0;
+          }
+        } catch (error) {
+          console.error("Error loading stats:", error);
+        }
+      }
+
+      async function loadAllBookings() {
+        try {
+          showLoading();
+          const response = await fetch("get_bookings.php?all=true");
+          allBookings = await response.json();
+          hideLoading();
+          displayBookingsTable(allBookings);
+          loadStats(); // Refresh stats
+        } catch (error) {
+          hideLoading();
+          console.error("Error loading bookings:", error);
+          showNotification("Error loading bookings", "error");
+        }
+      }
+
+      function filterBookings() {
+        const statusFilter = document.getElementById("statusFilter").value;
+
+        let filtered = allBookings;
+        if (statusFilter) {
+          filtered = allBookings.filter((b) => b.status === statusFilter);
+        }
+
+        displayBookingsTable(filtered);
+      }
+
+      function displayBookingsTable(bookings) {
+        const tbody = document.getElementById("bookingsTable");
+
+        if (!bookings || bookings.length === 0) {
+          tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 40px; color: #9ca3af;">
+                            No bookings found
+                        </td>
+                    </tr>
+                `;
+          return;
+        }
+
+        tbody.innerHTML = bookings
+          .map((booking) => {
+            const amount = calculateBookingAmount(
+              booking.start_time,
+              booking.end_time
+            );
+            const canModify =
+              booking.status === "Pending" || booking.status === "Confirmed";
+
+            return `
+                    <tr>
+                        <td>${booking.booking_id}</td>
+                        <td>
+                            <strong>${booking.user_name}</strong>
+                        </td>
+                        <td>${booking.court_name}</td>
+                        <td>${formatDate(booking.booking_date)}</td>
+                        <td>
+                            ${formatTime(booking.start_time)} - ${formatTime(
+              booking.end_time
+            )}
+                        </td>
+                        <td><strong>₱${amount}</strong></td>
+                        <td>
+                            <span class="badge badge-${booking.status.toLowerCase()}">
+                                ${booking.status}
+                            </span>
+                        </td>
+                        <td>
+                            ${
+                              canModify
+                                ? `
+                                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                    ${
+                                      booking.status === "Pending"
+                                        ? `
+                                        <button onclick="updateBookingStatus(${booking.booking_id}, 'Confirmed', '${booking.user_name}', '${booking.court_name}')" 
+                                                class="btn btn-sm" 
+                                                style="background: #10b981; padding: 6px 12px;">
+                                            ✓ Confirm
+                                        </button>
+                                    `
+                                        : ""
+                                    }
+                                    <button onclick="confirmCancel(${
+                                      booking.booking_id
+                                    }, '${booking.user_name}', '${
+                                    booking.court_name
+                                  }')" 
+                                            class="btn btn-sm btn-danger" 
+                                            style="padding: 6px 12px;">
+                                        ✕ Cancel
+                                    </button>
+                                    ${
+                                      booking.status === "Confirmed"
+                                        ? `
+                                        <button onclick="updateBookingStatus(${booking.booking_id}, 'Completed', '${booking.user_name}', '${booking.court_name}')" 
+                                                class="btn btn-sm" 
+                                                style="background: #8b5cf6; padding: 6px 12px;">
+                                            ✓ Complete
+                                        </button>
+                                    `
+                                        : ""
+                                    }
+                                </div>
+                            `
+                                : `
+                                <span style="color: #9ca3af; font-size: 14px;">No actions</span>
+                            `
+                            }
+                        </td>
+                    </tr>
+                `;
+          })
+          .join("");
+      }
+
+      function calculateBookingAmount(startTime, endTime) {
+        const [startHour, startMin] = startTime.split(":").map(Number);
+        const [endHour, endMin] = endTime.split(":").map(Number);
+        const hours = (endHour * 60 + endMin - startHour * 60 - startMin) / 60;
+        return Math.round(hours * 250); // ₱250 per hour
+      }
+
+      async function updateBookingStatus(
+        bookingId,
+        status,
+        userName,
+        courtName
+      ) {
+        try {
+          showLoading();
+
+          const response = await fetch("update_booking.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              booking_id: bookingId,
+              status: status,
+            }),
+          });
+
+          const data = await response.json();
+          hideLoading();
+
+          if (data.success) {
+            showNotification(
+              `Booking ${status.toLowerCase()} successfully!`,
+              "success"
+            );
+            loadAllBookings();
+          } else {
+            showNotification(
+              data.message || "Failed to update booking",
+              "error"
+            );
+          }
+        } catch (error) {
+          hideLoading();
+          console.error("Error updating status:", error);
+          showNotification("Error updating booking", "error");
+        }
+      }
+
+      function confirmCancel(bookingId, userName, courtName) {
+        document.getElementById("modalTitle").textContent = "Cancel Booking";
+        document.getElementById("modalMessage").innerHTML = `
+                Are you sure you want to cancel this booking?<br><br>
+                <strong>Member:</strong> ${userName}<br>
+                <strong>Court:</strong> ${courtName}<br><br>
+                <span style="color: #ef4444;">This action cannot be undone.</span>
+            `;
+
+        const confirmBtn = document.getElementById("confirmButton");
+        confirmBtn.style.background = "#ef4444";
+        confirmBtn.textContent = "Yes, Cancel Booking";
+        confirmBtn.onclick = () => {
+          closeModal();
+          updateBookingStatus(bookingId, "Cancelled", userName, courtName);
+        };
+
+        document.getElementById("confirmModal").style.display = "flex";
+      }
+
+      function closeModal() {
+        document.getElementById("confirmModal").style.display = "none";
+      }
+
+      // Close modal on outside click
+      document
+        .getElementById("confirmModal")
+        .addEventListener("click", function (e) {
+          if (e.target === this) {
+            closeModal();
+          }
+        });
+    </script>
+  </body>
+</html>

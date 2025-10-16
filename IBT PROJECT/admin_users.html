@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>User Management - IBT Badminton</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="nav-container">
+        <div class="nav-brand">
+          <div class="logo-icon-small">🏸</div>
+          <div>
+            <h1 class="nav-title">IBT Badminton Center</h1>
+            <p class="nav-subtitle">Sport Excellence</p>
+          </div>
+        </div>
+
+        <button class="mobile-menu-btn" id="mobileMenuBtn">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+
+        <div class="nav-menu" id="navMenu">
+          <a href="dashboard.html" class="nav-link active">Dashboard</a>
+          <a href="booking.html" class="nav-link" id="bookingLink">Bookings</a>
+          <a href="admin_reports.html" class="nav-link admin-only">Reports</a>
+          <a href="admin_users.html" class="nav-link admin-only">Users</a>
+          <a href="tournaments.html" class="nav-link">Tournaments</a>
+          <a href="history.html" class="nav-link active">History</a>
+          <button onclick="logout()" class="btn btn-logout">Logout</button>
+        </div>
+      </div>
+    </nav>
+
+    <main class="main-content">
+      <div class="container">
+        <div class="page-header">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              flex-wrap: wrap;
+              gap: 16px;
+            "
+          >
+            <div>
+              <h2>User Management</h2>
+              <p>View and manage all registered users</p>
+            </div>
+            <button class="btn btn-primary" onclick="showAddUserModal()">
+              ➕ Add New User
+            </button>
+          </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="stats-grid" style="margin-bottom: 32px">
+          <div class="card">
+            <h4 class="stat-title">Total Users</h4>
+            <p class="stat-number" id="totalUsers">0</p>
+          </div>
+          <div class="card">
+            <h4 class="stat-title">Administrators</h4>
+            <p class="stat-number" id="totalAdmins">0</p>
+          </div>
+          <div class="card">
+            <h4 class="stat-title">Members</h4>
+            <p class="stat-number" id="totalMembers">0</p>
+          </div>
+          <div class="card">
+            <h4 class="stat-title">New This Month</h4>
+            <p class="stat-number" id="newThisMonth">0</p>
+          </div>
+        </div>
+
+        <!-- Search and Filter -->
+        <div class="card" style="margin-bottom: 24px">
+          <div style="display: flex; gap: 16px; flex-wrap: wrap">
+            <input
+              type="text"
+              id="searchInput"
+              placeholder="Search by name or email..."
+              style="
+                flex: 1;
+                min-width: 250px;
+                padding: 12px;
+                border: 2px solid #e5e7eb;
+                border-radius: 8px;
+              "
+              onkeyup="filterUsers()"
+            />
+
+            <select
+              id="roleFilter"
+              style="
+                padding: 12px;
+                border: 2px solid #e5e7eb;
+                border-radius: 8px;
+              "
+              onchange="filterUsers()"
+            >
+              <option value="">All Roles</option>
+              <option value="Admin">Admin</option>
+              <option value="Member">Member</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="card">
+          <h3 class="card-title">Registered Users</h3>
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Registered Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="usersTable">
+                <tr>
+                  <td colspan="6" style="text-align: center; padding: 40px">
+                    <div style="color: #9ca3af">Loading users...</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Add User Modal -->
+    <div id="addUserModal" class="modal" style="display: none">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Add New User</h3>
+          <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <form id="addUserForm">
+          <div class="form-group">
+            <label>Full Name *</label>
+            <input type="text" name="name" required />
+          </div>
+          <div class="form-group">
+            <label>Email *</label>
+            <input type="email" name="email" required />
+          </div>
+          <div class="form-group">
+            <label>Password *</label>
+            <input type="password" name="password" required minlength="6" />
+            <small style="color: #6b7280; display: block; margin-top: 4px"
+              >Minimum 6 characters</small
+            >
+          </div>
+          <div class="form-group">
+            <label>Role *</label>
+            <select name="role" required>
+              <option value="Member">Member</option>
+              <option value="Admin">Admin</option>
+            </select>
+          </div>
+          <div class="button-group">
+            <button type="submit" class="btn btn-primary">Create User</button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="closeModal()"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div id="editUserModal" class="modal" style="display: none">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Edit User</h3>
+          <button class="modal-close" onclick="closeEditModal()">
+            &times;
+          </button>
+        </div>
+        <form id="editUserForm">
+          <input type="hidden" id="editUserId" name="user_id" />
+          <div class="form-group">
+            <label>Full Name *</label>
+            <input type="text" id="editName" name="name" required />
+          </div>
+          <div class="form-group">
+            <label>Email *</label>
+            <input type="email" id="editEmail" name="email" required />
+          </div>
+          <div class="form-group">
+            <label>Role *</label>
+            <select id="editRole" name="role" required>
+              <option value="Member">Member</option>
+              <option value="Admin">Admin</option>
+            </select>
+          </div>
+          <div class="button-group">
+            <button type="submit" class="btn btn-primary">Update User</button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="closeEditModal()"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="main.js"></script>
+    <script>
+      // Check if user is admin
+      const user = checkAuth();
+      if (!user || user.role !== "Admin") {
+        window.location.href = "dashboard.html";
+      }
+
+      let allUsers = [];
+
+      // Load users on page load
+      loadUsers();
+
+      async function loadUsers() {
+        try {
+          showLoading();
+          const response = await fetch("get_users.php");
+          const data = await response.json();
+          hideLoading();
+
+          if (data.success) {
+            allUsers = data.users;
+            displayUsers(allUsers);
+            updateStatistics(allUsers);
+          } else {
+            showNotification("Error loading users", "error");
+          }
+        } catch (error) {
+          hideLoading();
+          console.error("Error:", error);
+          showNotification("Connection error", "error");
+        }
+      }
+
+      function displayUsers(users) {
+        const tbody = document.getElementById("usersTable");
+
+        if (users.length === 0) {
+          tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 40px; color: #9ca3af;">
+                            No users found
+                        </td>
+                    </tr>
+                `;
+          return;
+        }
+
+        tbody.innerHTML = users
+          .map(
+            (user) => `
+                <tr>
+                    <td>${user.user_id}</td>
+                    <td><strong>${user.name}</strong></td>
+                    <td>${user.email}</td>
+                    <td>
+                        <span class="badge ${
+                          user.role === "Admin"
+                            ? "badge-confirmed"
+                            : "badge-pending"
+                        }">
+                            ${user.role}
+                        </span>
+                    </td>
+                    <td>${formatDate(user.created_at)}</td>
+                    <td>
+                        <button class="btn btn-sm" onclick="editUser(${
+                          user.user_id
+                        })" style="margin-right: 8px;">
+                            ✏️ Edit
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteUser(${
+                          user.user_id
+                        }, '${user.name}')">
+                            🗑️ Delete
+                        </button>
+                    </td>
+                </tr>
+            `
+          )
+          .join("");
+      }
+
+      function updateStatistics(users) {
+        const totalUsers = users.length;
+        const totalAdmins = users.filter((u) => u.role === "Admin").length;
+        const totalMembers = users.filter((u) => u.role === "Member").length;
+
+        // Calculate new users this month
+        const now = new Date();
+        const thisMonth = users.filter((u) => {
+          const userDate = new Date(u.created_at);
+          return (
+            userDate.getMonth() === now.getMonth() &&
+            userDate.getFullYear() === now.getFullYear()
+          );
+        }).length;
+
+        document.getElementById("totalUsers").textContent = totalUsers;
+        document.getElementById("totalAdmins").textContent = totalAdmins;
+        document.getElementById("totalMembers").textContent = totalMembers;
+        document.getElementById("newThisMonth").textContent = thisMonth;
+      }
+
+      function filterUsers() {
+        const searchTerm = document
+          .getElementById("searchInput")
+          .value.toLowerCase();
+        const roleFilter = document.getElementById("roleFilter").value;
+
+        let filtered = allUsers;
+
+        // Filter by search term
+        if (searchTerm) {
+          filtered = filtered.filter(
+            (user) =>
+              user.name.toLowerCase().includes(searchTerm) ||
+              user.email.toLowerCase().includes(searchTerm)
+          );
+        }
+
+        // Filter by role
+        if (roleFilter) {
+          filtered = filtered.filter((user) => user.role === roleFilter);
+        }
+
+        displayUsers(filtered);
+      }
+
+      // Add User Modal
+      function showAddUserModal() {
+        document.getElementById("addUserModal").style.display = "flex";
+      }
+
+      function closeModal() {
+        document.getElementById("addUserModal").style.display = "none";
+        document.getElementById("addUserForm").reset();
+      }
+
+      document
+        .getElementById("addUserForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const formData = new FormData(e.target);
+
+          try {
+            showLoading();
+            const response = await fetch("register.php", {
+              method: "POST",
+              body: formData,
+            });
+            const data = await response.json();
+            hideLoading();
+
+            if (data.success) {
+              showNotification("User created successfully", "success");
+              closeModal();
+              loadUsers();
+            } else {
+              showNotification(data.message, "error");
+            }
+          } catch (error) {
+            hideLoading();
+            showNotification("Error creating user", "error");
+          }
+        });
+
+      // Edit User
+      function editUser(userId) {
+        const user = allUsers.find((u) => u.user_id === userId);
+        if (!user) return;
+
+        document.getElementById("editUserId").value = user.user_id;
+        document.getElementById("editName").value = user.name;
+        document.getElementById("editEmail").value = user.email;
+        document.getElementById("editRole").value = user.role;
+
+        document.getElementById("editUserModal").style.display = "flex";
+      }
+
+      function closeEditModal() {
+        document.getElementById("editUserModal").style.display = "none";
+      }
+
+      document
+        .getElementById("editUserForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const formData = new FormData(e.target);
+          const data = Object.fromEntries(formData);
+
+          try {
+            showLoading();
+            const response = await fetch("update_user.php", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(data),
+            });
+            const result = await response.json();
+            hideLoading();
+
+            if (result.success) {
+              showNotification("User updated successfully", "success");
+              closeEditModal();
+              loadUsers();
+            } else {
+              showNotification(result.message, "error");
+            }
+          } catch (error) {
+            hideLoading();
+            showNotification("Error updating user", "error");
+          }
+        });
+
+      // Delete User
+      async function deleteUser(userId, userName) {
+        if (
+          !confirm(
+            `Are you sure you want to delete user "${userName}"?\n\nThis action cannot be undone.`
+          )
+        ) {
+          return;
+        }
+
+        try {
+          showLoading();
+          const response = await fetch("delete_user.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ user_id: userId }),
+          });
+          const data = await response.json();
+          hideLoading();
+
+          if (data.success) {
+            showNotification("User deleted successfully", "success");
+            loadUsers();
+          } else {
+            showNotification(data.message, "error");
+          }
+        } catch (error) {
+          hideLoading();
+          showNotification("Error deleting user", "error");
+        }
+      }
+
+      // Close modals on outside click
+      document
+        .getElementById("addUserModal")
+        .addEventListener("click", function (e) {
+          if (e.target === this) closeModal();
+        });
+
+      document
+        .getElementById("editUserModal")
+        .addEventListener("click", function (e) {
+          if (e.target === this) closeEditModal();
+        });
+    </script>
+    <style>
+      /* Modal Styles */
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        justify-content: center;
+        align-items: center;
+        z-index: 10000;
+        padding: 20px;
+      }
+
+      .modal-content {
+        background: white;
+        border-radius: 16px;
+        padding: 32px;
+        max-width: 500px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        animation: modalSlideIn 0.3s ease;
+      }
+
+      @keyframes modalSlideIn {
+        from {
+          transform: translateY(-50px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+      }
+
+      .modal-header h3 {
+        font-size: 24px;
+        font-weight: 700;
+        color: #111827;
+        margin: 0;
+      }
+
+      .modal-close {
+        background: none;
+        border: none;
+        font-size: 32px;
+        color: #6b7280;
+        cursor: pointer;
+        padding: 0;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+        transition: color 0.3s;
+      }
+
+      .modal-close:hover {
+        color: #111827;
+      }
+
+      .modal .form-group {
+        margin-bottom: 20px;
+      }
+
+      .modal .form-group label {
+        display: block;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+        font-size: 14px;
+      }
+
+      .modal .form-group input,
+      .modal .form-group select {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: all 0.3s;
+      }
+
+      .modal .form-group input:focus,
+      .modal .form-group select:focus {
+        outline: none;
+        border-color: #10b981;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+      }
+
+      .modal .button-group {
+        display: flex;
+        gap: 12px;
+        margin-top: 24px;
+      }
+
+      .modal .button-group button {
+        flex: 1;
+      }
+
+      @media (max-width: 768px) {
+        .modal-content {
+          padding: 24px 20px;
+        }
+
+        .table {
+          font-size: 14px;
+        }
+
+        .btn-sm {
+          font-size: 12px;
+          padding: 4px 8px !important;
+        }
+      }
+    </style>
+  </body>
+</html>

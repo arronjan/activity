@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Create Tournament - IBT Badminton</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body class="admin">
+    <!-- Navigation -->
+    <nav class="navbar">
+      <div class="nav-container">
+        <div class="nav-brand">
+          <div class="logo-icon-small">🏸</div>
+          <div>
+            <div class="nav-title">IBT Badminton</div>
+            <div class="nav-subtitle">Court Management System</div>
+          </div>
+        </div>
+        <div class="nav-menu">
+          <a href="dashboard.html" class="nav-link active">Dashboard</a>
+          <a href="booking.html" class="nav-link" id="bookingLink">Bookings</a>
+          <a href="admin_reports.html" class="nav-link admin-only">Reports</a>
+          <a href="admin_users.html" class="nav-link admin-only">Users</a>
+          <a href="tournaments.html" class="nav-link">Tournaments</a>
+          <a href="history.html" class="nav-link active">History</a>
+          <button onclick="logout()" class="btn btn-logout">Logout</button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="container">
+        <div class="page-header">
+          <h2>🏆 Create New Tournament</h2>
+          <p>Set up a new tournament for your badminton court members</p>
+        </div>
+
+        <div class="booking-layout">
+          <!-- Tournament Form -->
+          <div class="booking-main">
+            <div class="card">
+              <div class="card-title">
+                <span class="icon">📋</span>
+                Tournament Details
+              </div>
+              <form id="tournamentForm">
+                <!-- Basic Information -->
+                <div class="form-group">
+                  <label for="tournamentName">Tournament Name *</label>
+                  <input
+                    type="text"
+                    id="tournamentName"
+                    name="tournamentName"
+                    required
+                    placeholder="e.g., Summer Championship 2025"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="description">Description</label>
+                  <textarea
+                    id="description"
+                    name="description"
+                    rows="4"
+                    style="
+                      width: 100%;
+                      padding: 12px 16px;
+                      border: 2px solid #e5e7eb;
+                      border-radius: 10px;
+                      font-family: inherit;
+                      font-size: 16px;
+                    "
+                    placeholder="Brief description of the tournament..."
+                  ></textarea>
+                </div>
+
+                <!-- Tournament Type -->
+
+                <!-- Date and Time -->
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="startDate">Start Date *</label>
+                    <input
+                      type="date"
+                      id="startDate"
+                      name="startDate"
+                      required
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label for="endDate">End Date *</label>
+                    <input type="date" id="endDate" name="endDate" required />
+                  </div>
+                </div>
+
+                <!-- Status -->
+                <div class="form-group">
+                  <label for="status">Tournament Status *</label>
+                  <select
+                    id="status"
+                    name="status"
+                    required
+                    style="
+                      width: 100%;
+                      padding: 12px 16px;
+                      border: 2px solid #e5e7eb;
+                      border-radius: 10px;
+                      font-size: 16px;
+                      cursor: pointer;
+                    "
+                  >
+                    <option value="upcoming" selected>Upcoming</option>
+                    <option value="ongoing">Ongoing</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                </div>
+
+                <!-- Success/Error Messages -->
+                <div id="formMessage"></div>
+
+                <!-- Action Buttons -->
+                <div class="button-group">
+                  <button type="submit" class="btn btn-primary">
+                    <span>🏆</span> Create Tournament
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-secondary"
+                    onclick="window.location.href='tournaments.html'"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Preview Sidebar -->
+          <div class="booking-sidebar">
+            <div class="card">
+              <div class="card-title">
+                <span class="icon">👁️</span>
+                Preview
+              </div>
+              <div id="tournamentPreview">
+                <div class="empty-state">
+                  <div class="empty-icon">🏆</div>
+                  <p>Fill in the form to see a preview</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      // Set minimum dates
+      const today = new Date().toISOString().split("T")[0];
+      document.getElementById("startDate").min = today;
+      document.getElementById("endDate").min = today;
+
+      // Update end date minimum when start date changes
+      document
+        .getElementById("startDate")
+        .addEventListener("change", function () {
+          document.getElementById("endDate").min = this.value;
+        });
+
+      // Live preview update
+      const formInputs = document.querySelectorAll(
+        "#tournamentForm input, #tournamentForm select, #tournamentForm textarea"
+      );
+      formInputs.forEach((input) => {
+        input.addEventListener("input", updatePreview);
+        input.addEventListener("change", updatePreview);
+      });
+
+      function updatePreview() {
+        const name = document.getElementById("tournamentName").value;
+        const startDate = document.getElementById("startDate").value;
+        const endDate = document.getElementById("endDate").value;
+        const status = document.getElementById("status").value;
+
+        if (!name) {
+          document.getElementById("tournamentPreview").innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🏆</div>
+                        <p>Fill in the form to see a preview</p>
+                    </div>
+                `;
+          return;
+        }
+
+        const statusBadges = {
+          upcoming: "badge-pending",
+          ongoing: "badge-confirmed",
+          completed: "badge-cancelled",
+          cancelled: "badge-cancelled",
+        };
+
+        const statusLabels = {
+          upcoming: "Upcoming",
+          ongoing: "Ongoing",
+          completed: "Completed",
+          cancelled: "Cancelled",
+        };
+
+        document.getElementById("tournamentPreview").innerHTML = `
+                <div class="summary-card">
+                    <h3 style="margin-bottom: 12px; font-size: 18px;">${name}</h3>
+                    <span class="badge ${
+                      statusBadges[status] || "badge-pending"
+                    }">${statusLabels[status] || status}</span>
+                </div>
+                <div class="summary-details">
+                    ${
+                      startDate
+                        ? `
+                    <div class="summary-row">
+                        <span style="color: #6b7280;">Start Date:</span>
+                        <strong>${new Date(
+                          startDate
+                        ).toLocaleDateString()}</strong>
+                    </div>
+                    `
+                        : ""
+                    }
+                    ${
+                      endDate
+                        ? `
+                    <div class="summary-row">
+                        <span style="color: #6b7280;">End Date:</span>
+                        <strong>${new Date(
+                          endDate
+                        ).toLocaleDateString()}</strong>
+                    </div>
+                    `
+                        : ""
+                    }
+                </div>
+            `;
+      }
+
+      // Form submission
+      document
+        .getElementById("tournamentForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          const formData = new FormData(this);
+          const data = Object.fromEntries(formData.entries());
+
+          // Validate dates
+          const startDate = new Date(data.startDate);
+          const endDate = new Date(data.endDate);
+
+          if (endDate < startDate) {
+            showMessage("End date must be after start date", "error");
+            return;
+          }
+
+          try {
+            // Send to backend
+            const response = await fetch("api/create_tournament.php", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(data),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+              showMessage("Tournament created successfully!", "success");
+              setTimeout(() => {
+                window.location.href = "tournaments.html";
+              }, 1500);
+            } else {
+              showMessage(
+                result.message || "Failed to create tournament",
+                "error"
+              );
+            }
+          } catch (error) {
+            showMessage("An error occurred. Please try again.", "error");
+            console.error("Error:", error);
+          }
+        });
+
+      function showMessage(message, type) {
+        const messageDiv = document.getElementById("formMessage");
+        messageDiv.className =
+          type === "success" ? "success-message" : "error-message";
+        messageDiv.textContent = message;
+        messageDiv.style.display = "block";
+
+        setTimeout(() => {
+          messageDiv.style.display = "none";
+        }, 5000);
+      }
+
+      function logout() {
+        if (confirm("Are you sure you want to logout?")) {
+          window.location.href = "login.html";
+        }
+      }
+    </script>
+  </body>
+</html>

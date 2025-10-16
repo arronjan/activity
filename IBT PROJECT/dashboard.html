@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard - IBT Badminton</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="nav-container">
+        <div class="nav-brand">
+          <div class="logo-icon-small">🏸</div>
+          <div>
+            <h1 class="nav-title">IBT Badminton Center</h1>
+            <p class="nav-subtitle">Sport Excellence</p>
+          </div>
+        </div>
+
+        <button class="mobile-menu-btn" id="mobileMenuBtn">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+
+        <div class="nav-menu" id="navMenu">
+          <a href="dashboard.html" class="nav-link active">Dashboard</a>
+          <a href="booking.html" class="nav-link" id="bookingLink">Bookings</a>
+          <a href="admin_reports.html" class="nav-link admin-only">Reports</a>
+          <a href="admin_users.html" class="nav-link admin-only">Users</a>
+          <a href="tournaments.html" class="nav-link">Tournaments</a>
+          <a href="history.html" class="nav-link admin-only">History</a>
+          <button onclick="logout()" class="btn btn-logout">Logout</button>
+        </div>
+      </div>
+    </nav>
+
+    <main class="main-content">
+      <div class="container">
+        <div class="page-header">
+          <h2>Dashboard</h2>
+          <p>
+            Welcome back, <span id="userName">User</span>! (<span id="userRole"
+              >Member</span
+            >)
+          </p>
+        </div>
+
+        <!-- MEMBER STATISTICS -->
+        <div
+          id="memberStats"
+          class="stats-grid member-only"
+          style="display: none"
+        >
+          <div class="stat-card stat-green">
+            <div class="stat-content">
+              <div class="stat-icon">📅</div>
+              <div class="stat-value" id="memberActiveBookings">
+                <div class="spinner"></div>
+              </div>
+            </div>
+            <p class="stat-label">My Active Bookings</p>
+          </div>
+
+          <div class="stat-card stat-blue">
+            <div class="stat-content">
+              <div class="stat-icon">🏸</div>
+              <div class="stat-value" id="memberAvailableCourts">
+                <div class="spinner"></div>
+              </div>
+            </div>
+            <p class="stat-label">Available Courts</p>
+          </div>
+
+          <div class="stat-card stat-purple">
+            <div class="stat-content">
+              <div class="stat-icon">⏰</div>
+              <div class="stat-value" id="memberHoursBooked">
+                <div class="spinner"></div>
+              </div>
+            </div>
+            <p class="stat-label">My Hours This Month</p>
+          </div>
+
+          <div class="stat-card stat-orange">
+            <div class="stat-content">
+              <div class="stat-icon">💰</div>
+              <div class="stat-value" id="memberTotalSpent">
+                <div class="spinner"></div>
+              </div>
+            </div>
+            <p class="stat-label">My Total Spent</p>
+          </div>
+        </div>
+
+        <!-- ADMIN STATISTICS -->
+        <div
+          id="adminStats"
+          class="stats-grid admin-only"
+          style="display: none"
+        >
+          <div class="stat-card stat-green">
+            <div class="stat-content">
+              <div class="stat-icon">📊</div>
+              <div class="stat-value" id="adminTotalBookings">
+                <div class="spinner"></div>
+              </div>
+            </div>
+            <p class="stat-label">Total Bookings</p>
+          </div>
+
+          <div class="stat-card stat-blue">
+            <div class="stat-content">
+              <div class="stat-icon">👥</div>
+              <div class="stat-value" id="adminTotalMembers">
+                <div class="spinner"></div>
+              </div>
+            </div>
+            <p class="stat-label">Total Members</p>
+          </div>
+
+          <div class="stat-card stat-purple">
+            <div class="stat-content">
+              <div class="stat-icon">⏰</div>
+              <div class="stat-value" id="adminHoursToday">
+                <div class="spinner"></div>
+              </div>
+            </div>
+            <p class="stat-label">Hours Booked Today</p>
+          </div>
+
+          <div class="stat-card stat-orange">
+            <div class="stat-content">
+              <div class="stat-icon">💰</div>
+              <div class="stat-value" id="adminRevenueToday">
+                <div class="spinner"></div>
+              </div>
+            </div>
+            <p class="stat-label">Revenue Today</p>
+          </div>
+        </div>
+
+        <!-- Additional Admin Stats -->
+        <div
+          id="adminExtraStats"
+          class="stats-grid admin-only"
+          style="display: none; margin-top: 24px"
+        >
+          <div class="card">
+            <h4 class="stat-title">Available Courts</h4>
+            <p class="stat-number" id="adminAvailableCourts">0</p>
+            <p class="stat-change">Courts ready for booking</p>
+          </div>
+          <div class="card">
+            <h4 class="stat-title">Pending Bookings</h4>
+            <p class="stat-number" id="adminPendingBookings">0</p>
+            <p class="stat-change">Awaiting confirmation</p>
+          </div>
+          <div class="card">
+            <h4 class="stat-title">Revenue This Month</h4>
+            <p class="stat-number" id="adminRevenueMonth">₱0</p>
+            <p class="stat-change positive">Monthly earnings</p>
+          </div>
+          <div class="card">
+            <h4 class="stat-title">Upcoming (7 days)</h4>
+            <p class="stat-number" id="adminUpcoming">0</p>
+            <p class="stat-change">Future bookings</p>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="card">
+            <h3 class="card-title">
+              <span class="icon">📍</span>
+              Court Availability
+              <button
+                onclick="loadDashboardData()"
+                style="
+                  float: right;
+                  background: none;
+                  border: none;
+                  cursor: pointer;
+                  font-size: 20px;
+                "
+                title="Refresh"
+              >
+                🔄
+              </button>
+            </h3>
+            <div class="courts-grid" id="courtsGrid">
+              <div style="text-align: center; padding: 20px; color: #9ca3af">
+                Loading courts...
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 class="card-title">
+              <span class="icon">📅</span>
+              <span id="bookingsTitle">Recent Bookings</span>
+            </h3>
+            <div class="bookings-list" id="recentBookings">
+              <div style="text-align: center; padding: 20px; color: #9ca3af">
+                Loading bookings...
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script src="main.js"></script>
+    <script>
+      const currentUser = checkAuth();
+
+      // Show/hide sections based on role
+      if (currentUser.role === "Admin") {
+        document.getElementById("memberStats").style.display = "none";
+        document.getElementById("adminStats").style.display = "grid";
+        document.getElementById("adminExtraStats").style.display = "grid";
+        document.getElementById("bookingsTitle").textContent = "All Bookings";
+        document.getElementById("userRole").textContent = "Administrator";
+      } else {
+        document.getElementById("memberStats").style.display = "grid";
+        document.getElementById("adminStats").style.display = "none";
+        document.getElementById("adminExtraStats").style.display = "none";
+        document.getElementById("bookingsTitle").textContent =
+          "My Recent Bookings";
+        document.getElementById("userRole").textContent = "Member";
+      }
+
+      // Load dashboard data on page load
+      loadDashboardData();
+
+      // Auto-refresh every 30 seconds
+      setInterval(loadDashboardData, 30000);
+
+      async function loadDashboardData() {
+        try {
+          // Load real-time stats
+          await loadStats();
+
+          // Load courts
+          const courtsRes = await fetch("get_courts.php");
+          const courts = await courtsRes.json();
+          displayCourts(courts);
+
+          // Load bookings
+          const bookingsRes = await fetch("get_bookings.php");
+          const bookings = await bookingsRes.json();
+          displayRecentBookings(bookings);
+        } catch (error) {
+          console.error("Error loading data:", error);
+          showNotification("Error loading dashboard data", "error");
+        }
+      }
+
+      async function loadStats() {
+        try {
+          const user = JSON.parse(sessionStorage.getItem("user"));
+          const url = `get_dashboard_stats.php?user_id=${user.user_id}&role=${user.role}`;
+
+          const response = await fetch(url);
+          const data = await response.json();
+
+          if (data.success) {
+            const stats = data.stats;
+
+            if (user.role === "Admin") {
+              // Admin Stats
+              document.getElementById("adminTotalBookings").textContent =
+                stats.bookings_this_month || 0;
+              document.getElementById("adminTotalMembers").textContent =
+                stats.total_members || 0;
+              document.getElementById("adminHoursToday").textContent =
+                stats.hours_booked || 0;
+              document.getElementById("adminRevenueToday").textContent =
+                "₱" + (stats.revenue_today || 0).toLocaleString();
+
+              // Extra Admin Stats
+              document.getElementById("adminAvailableCourts").textContent =
+                stats.available_courts || 0;
+              document.getElementById("adminPendingBookings").textContent =
+                stats.pending_bookings || 0;
+              document.getElementById("adminRevenueMonth").textContent =
+                "₱" + (stats.revenue_this_month || 0).toLocaleString();
+              document.getElementById("adminUpcoming").textContent =
+                stats.upcoming_bookings || 0;
+            } else {
+              // Member Stats
+              document.getElementById("memberActiveBookings").textContent =
+                stats.active_bookings || 0;
+              document.getElementById("memberAvailableCourts").textContent =
+                stats.available_courts || 0;
+              document.getElementById("memberHoursBooked").textContent =
+                stats.hours_booked || 0;
+              document.getElementById("memberTotalSpent").textContent =
+                "₱" + (stats.total_spent || 0).toLocaleString();
+            }
+          }
+        } catch (error) {
+          console.error("Error loading stats:", error);
+        }
+      }
+
+      function displayCourts(courts) {
+        const grid = document.getElementById("courtsGrid");
+
+        if (!courts || courts.length === 0) {
+          grid.innerHTML =
+            '<div style="text-align: center; padding: 20px; color: #9ca3af;">No courts available</div>';
+          return;
+        }
+
+        grid.innerHTML = courts
+          .map(
+            (court) => `
+                <div class="court-card ${
+                  court.availability_status === "Available"
+                    ? "available"
+                    : "occupied"
+                }">
+                    <div class="court-icon">🏸</div>
+                    <p class="court-name">${court.court_name}</p>
+                    <p class="court-status">${court.availability_status}</p>
+                </div>
+            `
+          )
+          .join("");
+      }
+
+      function displayRecentBookings(bookings) {
+        const list = document.getElementById("recentBookings");
+        const user = JSON.parse(sessionStorage.getItem("user"));
+
+        // Filter bookings based on role
+        let filteredBookings = bookings;
+        if (user.role === "Member") {
+          filteredBookings = bookings.filter((b) => b.user_name === user.name);
+        }
+
+        if (!filteredBookings || filteredBookings.length === 0) {
+          const message =
+            user.role === "Admin"
+              ? "No bookings in the system"
+              : "You have no bookings yet";
+          list.innerHTML = `<div style="text-align: center; padding: 20px; color: #9ca3af;">${message}</div>`;
+          return;
+        }
+
+        list.innerHTML = filteredBookings
+          .slice(0, 4)
+          .map(
+            (booking) => `
+                <div class="booking-item">
+                    <div class="booking-info">
+                        <div>
+                            <p class="booking-court">${booking.court_name}</p>
+                            <p class="booking-player">${booking.user_name}</p>
+                        </div>
+                        <span class="badge badge-${booking.status.toLowerCase()}">${
+              booking.status
+            }</span>
+                    </div>
+                    <p class="booking-time">⏰ ${formatTime(
+                      booking.start_time
+                    )} - ${formatTime(booking.end_time)}</p>
+                    <p class="booking-time" style="font-size: 12px; color: #9ca3af;">📅 ${formatDate(
+                      booking.booking_date
+                    )}</p>
+                </div>
+            `
+          )
+          .join("");
+      }
+    </script>
+
+    <style>
+      /* Loading spinner */
+      .spinner {
+        width: 24px;
+        height: 24px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .stat-value {
+        min-height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* Refresh button hover */
+      button[title="Refresh"]:hover {
+        transform: rotate(180deg);
+        transition: transform 0.3s;
+      }
+
+      /* Hide member/admin specific elements */
+      .member-only {
+        display: none;
+      }
+
+      body.member .member-only {
+        display: block;
+      }
+
+      .admin-only {
+        display: none;
+      }
+
+      body.admin .admin-only {
+        display: block;
+      }
+
+      body.admin .member-only {
+        display: none !important;
+      }
+
+      /* Make sure booking link is hidden for admin */
+      body.admin #bookingLink {
+        display: none !important;
+      }
+    </style>
+  </body>
+</html>

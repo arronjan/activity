@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Register - IBT Badminton</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body class="login-page">
+    <div class="login-container">
+      <div class="login-grid">
+        <!-- Left Side - Information -->
+        <div class="login-info">
+          <div class="logo-section">
+            <div class="logo-icon">🏸</div>
+            <div>
+              <h1>IBT Badminton</h1>
+              <p class="tagline">Sport Center Management</p>
+            </div>
+          </div>
+          <p class="description">Join us and enjoy badminton experience</p>
+          <div class="features">
+            <div class="feature-item">
+              <span class="check-icon"></span>
+              <span>Quick and easy registration</span>
+            </div>
+            <div class="feature-item">
+              <span class="check-icon"></span>
+              <span>Book courts anytime, anywhere</span>
+            </div>
+            <div class="feature-item">
+              <span class="check-icon"></span>
+              <span>Secure payment options</span>
+            </div>
+            <div class="feature-item">
+              <span class="check-icon"></span>
+              <span>Track your booking history</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Side - Registration Form -->
+        <div class="login-form-container">
+          <div class="login-form">
+            <h2>Create Account</h2>
+            <p class="subtitle">Sign up to start booking courts</p>
+
+            <form id="registerForm">
+              <div class="form-group">
+                <label for="fullName">Full Name</label>
+                <input
+                  type="text"
+                  id="fullName"
+                  name="name"
+                  placeholder="Kim L. Escobido"
+                  required
+                  minlength="3"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="email">Email Address</label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  placeholder="kim@gmail.com"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="phone">Phone Number (Optional)</label>
+                <input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  placeholder="+63 912 345 6789"
+                  pattern="[0-9+\s-]*"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="password">Password</label>
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  placeholder="••••••••"
+                  required
+                  minlength="6"
+                />
+                <small class="form-hint">Minimum 6 characters</small>
+              </div>
+
+              <div class="form-group">
+                <label for="confirmPassword">Confirm Password</label>
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  name="confirm_password"
+                  placeholder="••••••••"
+                  required
+                  minlength="6"
+                />
+              </div>
+
+              <div class="form-group">
+                <label class="checkbox-container">
+                  <input type="checkbox" id="terms" required />
+                  <span class="checkbox-label">
+                    I agree to the
+                    <a href="#" class="link">Terms and Conditions</a> and
+                    <a href="#" class="link">Privacy Policy</a>
+                  </span>
+                </label>
+              </div>
+
+              <div class="button-group">
+                <button type="submit" class="btn btn-primary">
+                  Create Account
+                </button>
+              </div>
+
+              <div class="form-footer">
+                <p class="signup-text">
+                  Already have an account?
+                  <a href="index.html" class="link">Sign in</a>
+                </p>
+              </div>
+            </form>
+
+            <div
+              id="errorMessage"
+              class="error-message"
+              style="display: none"
+            ></div>
+            <div
+              id="successMessage"
+              class="success-message"
+              style="display: none"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="main.js"></script>
+    <script>
+      // Password strength indicator
+      const passwordInput = document.getElementById("password");
+      const confirmPasswordInput = document.getElementById("confirmPassword");
+
+      // Real-time password match validation
+      confirmPasswordInput.addEventListener("input", function () {
+        if (this.value !== passwordInput.value) {
+          this.setCustomValidity("Passwords do not match");
+        } else {
+          this.setCustomValidity("");
+        }
+      });
+
+      // Form submission
+      document
+        .getElementById("registerForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          // Get form data
+          const formData = new FormData(e.target);
+          const password = formData.get("password");
+          const confirmPassword = formData.get("confirm_password");
+
+          // Validate passwords match
+          if (password !== confirmPassword) {
+            showError("Passwords do not match");
+            return;
+          }
+
+          // Validate password strength
+          if (password.length < 6) {
+            showError("Password must be at least 6 characters long");
+            return;
+          }
+
+          // Validate terms acceptance
+          if (!document.getElementById("terms").checked) {
+            showError("Please accept the Terms and Conditions");
+            return;
+          }
+
+          // Remove confirm_password from form data
+          formData.delete("confirm_password");
+
+          // Show loading
+          showLoading();
+
+          try {
+            const response = await fetch("register.php", {
+              method: "POST",
+              body: formData,
+            });
+
+            const data = await response.json();
+            hideLoading();
+
+            if (data.success) {
+              showSuccess("Registration successful! Redirecting to login...");
+
+              // Reset form
+              e.target.reset();
+
+              // Redirect to login after 2 seconds
+              setTimeout(() => {
+                window.location.href = "index.html";
+              }, 2000);
+            } else {
+              showError(data.message || "Registration failed");
+            }
+          } catch (error) {
+            hideLoading();
+            console.error("Registration error:", error);
+            showError("Connection error. Please try again.");
+          }
+        });
+
+      function showError(message) {
+        const errorDiv = document.getElementById("errorMessage");
+        const successDiv = document.getElementById("successMessage");
+
+        successDiv.style.display = "none";
+        errorDiv.textContent = message;
+        errorDiv.style.display = "block";
+
+        // Auto hide after 5 seconds
+        setTimeout(() => {
+          errorDiv.style.display = "none";
+        }, 5000);
+      }
+
+      function showSuccess(message) {
+        const errorDiv = document.getElementById("errorMessage");
+        const successDiv = document.getElementById("successMessage");
+
+        errorDiv.style.display = "none";
+        successDiv.textContent = message;
+        successDiv.style.display = "block";
+      }
+
+      // Email validation
+      const emailInput = document.getElementById("email");
+      emailInput.addEventListener("blur", function () {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (this.value && !emailRegex.test(this.value)) {
+          this.setCustomValidity("Please enter a valid email address");
+        } else {
+          this.setCustomValidity("");
+        }
+      });
+
+      // Name validation
+      const nameInput = document.getElementById("fullName");
+      nameInput.addEventListener("input", function () {
+        // Remove numbers and special characters
+        this.value = this.value.replace(/[^a-zA-Z\s]/g, "");
+      });
+
+      // Phone number formatting
+      const phoneInput = document.getElementById("phone");
+      phoneInput.addEventListener("input", function () {
+        // Allow only numbers, +, spaces, and hyphens
+        this.value = this.value.replace(/[^0-9+\s-]/g, "");
+      });
+
+      // Password strength indicator
+      passwordInput.addEventListener("input", function () {
+        const password = this.value;
+        const strength = calculatePasswordStrength(password);
+        updatePasswordStrength(strength);
+      });
+
+      function calculatePasswordStrength(password) {
+        let strength = 0;
+
+        if (password.length >= 6) strength++;
+        if (password.length >= 10) strength++;
+        if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
+        if (/\d/.test(password)) strength++;
+        if (/[^a-zA-Z\d]/.test(password)) strength++;
+
+        return strength;
+      }
+
+      function updatePasswordStrength(strength) {
+        // Remove existing strength indicator
+        let indicator = document.getElementById("passwordStrength");
+        if (!indicator) {
+          indicator = document.createElement("div");
+          indicator.id = "passwordStrength";
+          indicator.style.cssText =
+            "margin-top: 8px; font-size: 12px; font-weight: 600;";
+          passwordInput.parentElement.appendChild(indicator);
+        }
+
+        const colors = ["#ef4444", "#f97316", "#eab308", "#84cc16", "#10b981"];
+        const labels = ["Very Weak", "Weak", "Fair", "Good", "Strong"];
+
+        if (passwordInput.value.length > 0) {
+          indicator.style.color = colors[strength - 1] || "#ef4444";
+          indicator.textContent = `Password Strength: ${
+            labels[strength - 1] || "Very Weak"
+          }`;
+        } else {
+          indicator.textContent = "";
+        }
+      }
+    </script>
+  </body>
+</html>
